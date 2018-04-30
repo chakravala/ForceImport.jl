@@ -8,18 +8,36 @@ export @force
 
 """
 
-    @force using ModuleName
+        @force using Module
 
-Forces imports of `ModuleName`'s exports, even if there are conflicts.
+Forces imports of exported methods from `Module`, even if there are conflicts.
 """
-macro force(mod)
-    mod.head ∉ [:using,:toplevel] && throw(error("$mod not a using statement"))
-    pkgs = mod.head ≠ :using ? mod.args : [mod]
+macro force(use)
+    use.head ∉ [:using,:toplevel] && throw(error("$use not a using statement"))
+    pkgs = use.head ≠ :using ? use.args : [use]
     out = []
     for p ∈ pkgs
-	m = p.args[end]
-	s = :([Expr(:import,Symbol($(string(m))),j) for j ∈ names($(esc(m)))])
-	push!(out,Expr(:import,p.args...),:($(esc(:eval))(Expr(:toplevel,$s...))))
+        m = p.args[end]
+        s = :([Expr(:import,Symbol($(string(m))),j) for j ∈ names($(esc(m)))])
+        push!(out,Expr(:import,p.args...),:($(esc(:eval))(Expr(:toplevel,$s...))))
+    end
+    return Expr(:block,out...)
+end
+
+"""
+
+        ForceImport.@port using Module
+
+Force exports methods from `Module` in current module.
+"""
+macro port(use)
+    use.head ∉ [:using,:toplevel] && throw(error("$use not a using statement"))
+    pkgs = use.head ≠ :using ? use.args : [use]
+    out = []
+    for p ∈ pkgs
+        m = p.args[end]
+        s = :([Expr(:export,Symbol($(string(m))),j) for j ∈ names($(esc(m)))])
+        push!(out,Expr(:export,p.args...),:($(esc(:eval))(Expr(:toplevel,$s...))))
     end
     return Expr(:block,out...)
 end
