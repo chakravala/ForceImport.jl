@@ -12,13 +12,14 @@ export @force
 
 Forces imports of `ModuleName`'s exports, even if there are conflicts.
 """
-macro force(import_module)
-    import_module.head ≠ :using && throw(error("not a using statement"))
-    pkgs = import_module.args
+macro force(mod)
+    mod.head ∉ [:using,:toplevel] && throw(error("$mod not a using statement"))
+    pkgs = mod.head ≠ :using ? mod.args : [mod]
     out = []
-    for pkg ∈ pkgs
-        s=:(Expr(:toplevel,[Expr(:import,Symbol($(string(pkg))),j) for j∈names($pkg)]...))
-        push!(out,:(import $pkg),:(eval($s)))
+    for p ∈ pkgs
+	m = p.args[end]
+	s = :([Expr(:import,Symbol($(string(m))),j) for j ∈ names($(esc(m)))])
+	push!(out,Expr(:import,p.args...),:($(esc(:eval))(Expr(:toplevel,$s...))))
     end
     return Expr(:block,out...)
 end
