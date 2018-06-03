@@ -8,7 +8,7 @@ end
 
 module Bar
     using ForceImport
-    @force using Foo
+    @force using Main.Foo
 end
 
 # write your own tests here

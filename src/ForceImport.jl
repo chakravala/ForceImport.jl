@@ -17,8 +17,13 @@ macro force(use)
     pkgs = use.head ≠ :using ? use.args : [use]
     out = []
     for p ∈ pkgs
-        m = p.args[end]
-        s = :([Expr(:import,Symbol($(string(m))),j) for j ∈ names($(esc(m)))])
+        w = typeof(p.args[end]) == Symbol ? [p.args[end]] : p.args[end].args
+        m = VERSION > v"0.7-" ? p.args[end].args[end] : p.args[end]
+        s = if VERSION > v"0.7-"
+            :([Expr(:import,Expr(:.,Symbol.($(string.(w)))...,j)) for j ∈ names($(esc(m)))])
+        else
+            :([Expr(:import,Symbol.($(string.(w)))...,j) for j ∈ names($(esc(m)))])
+        end
         push!(out,Expr(:import,p.args...),:($(esc(:eval))(Expr(:toplevel,$s...))))
     end
     return Expr(:block,out...)
@@ -35,8 +40,13 @@ macro port(use)
     pkgs = use.head ≠ :using ? use.args : [use]
     out = []
     for p ∈ pkgs
-        m = p.args[end]
-        s = :([Expr(:export,Symbol($(string(m))),j) for j ∈ names($(esc(m)))])
+        w = typeof(p.args[end]) == Symbol ? [p.args[end]] : p.args[end].args
+        m = VERSION > v"0.7-" ? p.args[end].args[end] : p.args[end]
+        s = if VERSION > v"0.7-"
+            :([Expr(:export,Expr(:.,Symbol.($(string.(w)))...,j)) for j ∈ names($(esc(m)))])
+        else
+            :([Expr(:export,Symbol.($(string.(w)))...,j) for j ∈ names($(esc(m)))])
+        end
         push!(out,Expr(:export,p.args...),:($(esc(:eval))(Expr(:toplevel,$s...))))
     end
     return Expr(:block,out...)
