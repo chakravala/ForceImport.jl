@@ -1,5 +1,5 @@
 using ForceImport
-using Base.Test
+VERSION > v"0.7-" ? (using Test) : (using Base.Test)
 
 module Foo
     export +

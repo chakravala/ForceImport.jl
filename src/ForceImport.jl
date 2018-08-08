@@ -1,4 +1,4 @@
-__precompile__()
+VERSION ≤ v"0.7-" && __precompile__()
 module ForceImport
 
 #   This file is part of ForceImport.jl. It is licensed under the MIT license
@@ -68,6 +68,7 @@ macro merge(expr)
         for name in names(current_module())
             try
                 eval(ForceImport.imp($(string(fun)),name))
+            catch
             end
         end
         eval($(Expr(:quote,expr)))
@@ -78,6 +79,6 @@ function imp(fun::String,name::Symbol)
     :(Symbol($fun) ∈ names($name) && (import $name.$(Symbol(fun))))
 end
 
-__init__() = nothing
+#__init__() = nothing
 
 end # module
